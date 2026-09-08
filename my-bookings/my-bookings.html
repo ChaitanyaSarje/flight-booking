@@ -1,0 +1,8 @@
+<main class="bookings-page">
+  <section>
+    <p class="eyebrow">YOUR TRIPS</p><h1>My bookings</h1><p class="lead">Bookings made in this browser are saved here.</p>
+    @if (bookings.length) {
+      <div class="booking-list">@for (booking of bookings; track booking.reference) { <article><div><span>REFERENCE</span><strong>{{ booking.reference }}</strong></div><div><b>{{ booking.flight.airline }} · {{ booking.flight.flightNumber }}</b><p>{{ booking.flight.from }} → {{ booking.flight.to }} · {{ booking.departureDate || 'No date chosen' }}</p><small>{{ booking.flight.departureTime }} – {{ booking.flight.arrivalTime }} · {{ booking.passenger.name }}</small></div><div><b>{{ booking.flight.price | currency:'INR':'symbol':'1.0-0' }}</b><span class="status">{{ booking.status }}</span></div></article> }</div>
+    } @else { <div class="empty"><h2>No bookings yet</h2><p>Search the dummy flight list and complete the mock payment to see a booking here.</p><a routerLink="/flights">Find flights</a></div> }
+  </section>
+</main>

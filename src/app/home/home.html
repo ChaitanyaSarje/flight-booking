@@ -1,0 +1,35 @@
+<main class="page-shell">
+  @if (view === 'search' || view === 'results') {
+    <section class="hero" [ngClass]="{ compact: view === 'results' }">
+      <div><p class="eyebrow">DOMESTIC FLIGHTS</p><h1>Find your next flight</h1><p>Search our locally stored flight schedule.</p></div>
+      <form class="search-form" (ngSubmit)="searchFlights()">
+        <label>From<select name="from" [(ngModel)]="from"><option value="">Choose city</option>@for (city of cities; track city) { <option [value]="city">{{ city }}</option> }</select></label>
+        <label>To<select name="to" [(ngModel)]="to"><option value="">Choose city</option>@for (city of cities; track city) { <option [value]="city">{{ city }}</option> }</select></label>
+        <label>Departure date<input name="departureDate" type="date" [(ngModel)]="departureDate" required></label>
+        <button class="primary" type="submit" [disabled]="loading">{{ loading ? 'Searching…' : 'Book this' }}</button>
+      </form>
+      @if (errorMessage && view !== 'results') { <p class="error">{{ errorMessage }}</p> }
+    </section>
+  }
+
+  @if (view === 'results') {
+    <section class="content">
+      <div class="results-heading"><div><p class="eyebrow">SEARCH RESULTS</p><h2>{{ from }} to {{ to }}</h2><p>{{ departureDate || 'Choose a date at checkout' }} · {{ flights.length }} flight{{ flights.length === 1 ? '' : 's' }} found</p></div><button class="text-button" (click)="newSearch()">Start new search</button></div>
+      @if (flights.length) {
+        <div class="results-layout">
+          <aside class="filters"><h3>Filter flights</h3><label>Airline<select [(ngModel)]="airlineFilter"><option value="All">All airlines</option>@for (airline of airlines; track airline) { <option [value]="airline">{{ airline }}</option> }</select></label><label>Maximum fare <strong>{{ maxPrice | currency:'INR':'symbol':'1.0-0' }}</strong><input type="range" min="2000" max="10000" step="100" [(ngModel)]="maxPrice"></label><label>Sort by<select [(ngModel)]="sortBy"><option value="price">Lowest fare</option><option value="departure">Departure time</option></select></label></aside>
+          <div class="flight-list">@for (flight of filteredFlights; track flight.id) { <article class="flight-card"><div class="airline"><strong>{{ flight.airline }}</strong><span>{{ flight.flightNumber }}</span><small>{{ flight.aircraft }}</small></div><div class="route"><div><strong>{{ flight.departureTime }}</strong><span>{{ flight.from }} · {{ flight.departureAirport }}</span></div><div class="journey"><span>{{ flight.duration }}</span><i></i><small>{{ flight.stops === 0 ? 'Non-stop' : flight.stops + ' stop' }}</small></div><div><strong>{{ flight.arrivalTime }}</strong><span>{{ flight.to }} · {{ flight.arrivalAirport }}</span></div></div><div class="fare"><strong>{{ flight.price | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ flight.availableSeats }} seats left</small><button class="primary" (click)="selectFlight(flight)">Book this</button></div></article> } @empty { <div class="empty"><h3>No matching flights</h3><p>Try increasing the maximum fare or changing the airline filter.</p></div> }</div>
+        </div>
+      } @else { <div class="empty"><h3>No flights available</h3><p>There are no dummy flights for this route yet. Try Pune → Delhi, Pune → Mumbai, Pune → Goa, Mumbai → Bangalore, or Delhi → Bangalore.</p></div> }
+    </section>
+  }
+
+  @if (view === 'booking' || view === 'payment') {
+    <section class="checkout content"><button class="text-button" (click)="backToResults()">← Back to results</button><div class="checkout-grid"><section class="form-card"><p class="eyebrow">{{ view === 'booking' ? 'STEP 1 OF 2' : 'STEP 2 OF 2' }}</p><h2>{{ view === 'booking' ? 'Passenger details' : 'Mock payment' }}</h2>
+      @if (view === 'booking') { <div class="field-grid"><label>Full name<input [(ngModel)]="passenger.name" placeholder="As on government ID"></label><label>Email<input type="email" [(ngModel)]="passenger.email" placeholder="you@example.com"></label><label>Phone<input type="tel" [(ngModel)]="passenger.phone" placeholder="10-digit mobile number"></label><label>Seat <select [(ngModel)]="selectedSeat">@for (seat of seats; track seat) { <option [value]="seat">{{ seat }} · Economy</option> }</select></label></div><button class="primary" (click)="continueToPayment()">Continue to payment</button> }
+      @if (view === 'payment') { <p class="notice">Demo only — no money will be charged.</p><div class="field-grid"><label>Card number<input [(ngModel)]="payment.cardNumber" inputmode="numeric" placeholder="4111 1111 1111 1111"></label><label>Name on card<input [(ngModel)]="payment.cardName" placeholder="Passenger name"></label><label>Expiry<input [(ngModel)]="payment.expiry" placeholder="MM/YY"></label><label>CVV<input [(ngModel)]="payment.cvv" inputmode="numeric" maxlength="4" placeholder="123"></label></div><button class="primary" (click)="pay()">Pay {{ selectedFlight!.price | currency:'INR':'symbol':'1.0-0' }}</button> }
+      @if (errorMessage) { <p class="error">{{ errorMessage }}</p> }</section><aside class="summary"><h3>Your booking</h3><strong>{{ selectedFlight!.airline }} · {{ selectedFlight!.flightNumber }}</strong><p>{{ selectedFlight!.from }} <b>→</b> {{ selectedFlight!.to }}</p><div><span>{{ selectedFlight!.departureAirport }} → {{ selectedFlight!.arrivalAirport }}</span><span>{{ selectedFlight!.departureTime }} – {{ selectedFlight!.arrivalTime }} · {{ departureDate }}</span><span>Aircraft: {{ selectedFlight!.aircraft }} · {{ selectedFlight!.aircraftCapacity }} seats</span><span>Passenger: {{ passenger.name || travellerName }} · Seat {{ selectedSeat }} · Economy</span><span>Managed by: {{ selectedFlight!.managedBy }}</span></div><hr><strong class="total">{{ selectedFlight!.price | currency:'INR':'symbol':'1.0-0' }}</strong><small>Payment: Card · status will be Paid after booking</small></aside></div></section>
+  }
+
+  @if (view === 'confirmation') { <section class="confirmation content"><div class="success-icon">✓</div><p class="eyebrow">BOOKING CONFIRMED</p><h1>You're all set, {{ passenger.name }}!</h1><p>Your mock payment was successful. This booking exists only in the frontend demo.</p><div class="confirmation-card"><span>Booking reference</span><strong>{{ bookingReference }}</strong><hr><b>{{ selectedFlight!.airline }} {{ selectedFlight!.flightNumber }}</b><p>{{ selectedFlight!.from }} ({{ selectedFlight!.departureAirport }}) → {{ selectedFlight!.to }} ({{ selectedFlight!.arrivalAirport }})</p><p>{{ departureDate }} · {{ selectedFlight!.departureTime }} – {{ selectedFlight!.arrivalTime }} · {{ selectedFlight!.aircraft }}</p><p>Passenger: {{ passenger.name }} · Ticket: TK{{ bookingReference.slice(2) }} · Seat {{ selectedSeat }} · Economy</p><p>Payment: Card · {{ selectedFlight!.price | currency:'INR':'symbol':'1.0-0' }} · Paid</p></div><div class="confirmation-actions"><a class="primary" routerLink="/my-bookings">View my bookings</a><button class="text-button" (click)="newSearch()">Book another flight</button></div></section> }
+</main>
